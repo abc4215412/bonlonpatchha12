@@ -1,3 +1,5 @@
+-- Chạy từ executor
+
 local Players = game:GetService("Players")
 local CollectionService = game:GetService("CollectionService")
 
