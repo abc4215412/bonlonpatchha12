@@ -18,7 +18,7 @@ Players.LocalPlayer.OnTeleport:Connect(function(State)
     if not TeleportCheck and queueteleport then
         TeleportCheck = true
         _G.ChestFarmLoaded = nil
-        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/TenBan/chest-farmer/main/chestfarm.lua'))()")
+        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/abc4215412/chest-farmer/refs/heads/main/chestfarm.lua'))()")
     end
 end)
 
