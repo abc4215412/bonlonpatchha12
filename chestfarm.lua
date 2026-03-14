@@ -1,3 +1,4 @@
+```lua
 -- Chạy từ executor
 
 local Players = game:GetService("Players")
@@ -211,23 +212,10 @@ local function rebuildList()
     return remaining
 end
 
--- ===================== DETECT MAP READY =====================
-local function waitForMapReady()
-    setStatus("Chờ map...", Color3.fromRGB(255, 200, 60))
-    while not game.ReplicatedStorage:GetAttribute("NumBonusChests") do
-        task.wait(0.2)
-    end
-    while #CollectionService:GetTagged("BonusChestPart") == 0 do
-        task.wait(0.2)
-    end
-    addLog("✅ " .. #CollectionService:GetTagged("BonusChestPart") .. " chest ready")
-end
-
 -- ===================== FARM 1 ROUND =====================
 local function farmOneRound()
     local parts = CollectionService:GetTagged("BonusChestPart")
     local opened = 0
-    local skipped = 0
 
     rebuildList()
     addLog("▶ Farm " .. #parts .. " chest")
@@ -244,20 +232,14 @@ local function farmOneRound()
         end
 
         local prompt = getPrompt(part)
-        if not prompt then
-            skipped += 1
-            continue
-        end
+        if not prompt then continue end
 
         setStatus("Chest " .. i .. "/" .. #parts, Color3.fromRGB(255, 220, 50))
         char.HumanoidRootPart.CFrame = CFrame.new(part.Position + Vector3.new(0, 4, 0))
         task.wait(0.2)
 
         prompt = getPrompt(part)
-        if not prompt then
-            skipped += 1
-            continue
-        end
+        if not prompt then continue end
 
         local ok = pcall(fireproximityprompt, prompt)
         if not ok then
@@ -275,44 +257,31 @@ local function farmOneRound()
         addLog("✓ #" .. i .. " | " .. opened .. " mở")
     end
 
-    return opened, skipped
+    return opened
 end
 
 -- ===================== MAIN LOOP =====================
 task.spawn(function()
     while true do
-        waitForMapReady()
-
-        -- Lần farm đầu
-        farmOneRound()
-        local remaining = rebuildList()
-
-        -- Nếu còn sót thì retry sau 10 giây cho đến khi sạch
-        local retryCount = 0
-        while remaining > 0 do
-            retryCount += 1
+        -- Đếm ngược 20 giây
+        for i = 20, 1, -1 do
             setStatus(
-                "⚠ Còn " .. remaining .. " chest — retry #" .. retryCount .. " sau 10s",
-                Color3.fromRGB(255, 180, 60)
+                "⏳ Bắt đầu sau " .. i .. "s",
+                Color3.fromRGB(255, 200, 60)
             )
-            addLog("⚠ Còn " .. remaining .. " chest, retry #" .. retryCount .. " sau 10s")
-
-            -- Đếm ngược 10 giây
-            for i = 10, 1, -1 do
-                setStatus(
-                    "⏳ Retry #" .. retryCount .. " sau " .. i .. "s",
-                    Color3.fromRGB(255, 180, 60)
-                )
-                task.wait(1)
-            end
-
-            farmOneRound()
-            remaining = rebuildList()
+            task.wait(1)
         end
 
-        -- Sạch hết chest
-        setStatus("✅ Sạch chest! Chờ map mới...", Color3.fromRGB(80, 255, 120))
-        addLog("✅ Mở sạch! Chờ map tiếp...")
+        -- Scan và hiện list chest
+        rebuildList()
+        addLog("🔍 " .. #CollectionService:GetTagged("BonusChestPart") .. " chest found")
+
+        -- Farm 1 lần duy nhất
+        local opened = farmOneRound()
+        rebuildList()
+
+        setStatus("✅ Xong! " .. opened .. " mở — chờ map mới", Color3.fromRGB(80, 255, 120))
+        addLog("✅ Xong! Chờ map mới...")
 
         -- Chờ map reset
         while game.ReplicatedStorage:GetAttribute("NumBonusChests") ~= nil do
