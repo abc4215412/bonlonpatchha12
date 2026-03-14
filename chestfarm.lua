@@ -9,9 +9,9 @@ if _G.ChestFarmLoaded then return end
 _G.ChestFarmLoaded = true
 
 -- ===================== KEEP ALIVE - Y HỆT INFINITE YIELD =====================
-local queueteleport = missing("function", queue_on_teleport 
+local queueteleport = queue_on_teleport 
     or (syn and syn.queue_on_teleport) 
-    or (fluxus and fluxus.queue_on_teleport))
+    or (fluxus and fluxus.queue_on_teleport)
 
 local TeleportCheck = false
 Players.LocalPlayer.OnTeleport:Connect(function(State)
