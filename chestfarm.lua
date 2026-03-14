@@ -268,8 +268,8 @@ end
 
 -- ===================== CHẠY 1 LẦN SAU 20 GIÂY =====================
 task.spawn(function()
-    -- Đếm ngược 20 giây
-    for i = 20, 1, -1 do
+    -- Đếm ngược 30 giây
+    for i = 30, 1, -1 do
         setStatus("Bắt đầu sau " .. i .. "s...", Color3.fromRGB(255, 200, 60))
         task.wait(1)
     end
