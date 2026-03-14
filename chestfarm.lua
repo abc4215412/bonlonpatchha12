@@ -8,69 +8,68 @@ local character = player.Character or player.CharacterAdded:Wait()
 if _G.ChestFarmLoaded then return end
 _G.ChestFarmLoaded = true
 
--- ===================== KEEP ALIVE KHI TELEPORT =====================
-local queueteleport = queue_on_teleport 
+-- ===================== KEEP ALIVE - Y HỆT INFINITE YIELD =====================
+local queueteleport = missing("function", queue_on_teleport 
     or (syn and syn.queue_on_teleport) 
-    or (fluxus and fluxus.queue_on_teleport)
+    or (fluxus and fluxus.queue_on_teleport))
 
-if queueteleport then
-    local teleportCheck = false
-    player.OnTeleport:Connect(function(state)
-        if state == Enum.TeleportState.Started and not teleportCheck then
-            teleportCheck = true
-            _G.ChestFarmLoaded = nil
-            queueteleport([[
-                loadstring(game:HttpGet(
-                    'https://raw.githubusercontent.com/TenBan/chest-farmer/main/chestfarm.lua'
-                ))()
-            ]])
-        end
-    end)
+local TeleportCheck = false
+Players.LocalPlayer.OnTeleport:Connect(function(State)
+    if not TeleportCheck and queueteleport then
+        TeleportCheck = true
+        _G.ChestFarmLoaded = nil
+        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/TenBan/chest-farmer/main/chestfarm.lua'))()")
+    end
+end)
+
+-- ===================== GUI PARENT - Y HỆT INFINITE YIELD =====================
+local COREGUI = game:GetService("CoreGui")
+local MAX_DISPLAY_ORDER = 2147483647
+local PARENT = nil
+
+local function randomString()
+    local length = math.random(10,20)
+    local array = {}
+    for i = 1, length do
+        array[i] = string.char(math.random(32, 126))
+    end
+    return table.concat(array)
+end
+
+if get_hidden_gui or gethui then
+    local hiddenUI = get_hidden_gui or gethui
+    local Main = Instance.new("ScreenGui")
+    Main.Name = randomString()
+    Main.ResetOnSpawn = false
+    Main.DisplayOrder = MAX_DISPLAY_ORDER
+    Main.Parent = hiddenUI()
+    PARENT = Main
+elseif syn and syn.protect_gui then
+    local Main = Instance.new("ScreenGui")
+    Main.Name = randomString()
+    Main.ResetOnSpawn = false
+    Main.DisplayOrder = MAX_DISPLAY_ORDER
+    syn.protect_gui(Main)
+    Main.Parent = COREGUI
+    PARENT = Main
+elseif COREGUI:FindFirstChild("RobloxGui") then
+    PARENT = COREGUI.RobloxGui
 else
-    warn("executor không hỗ trợ queue_on_teleport!")
+    local Main = Instance.new("ScreenGui")
+    Main.Name = randomString()
+    Main.ResetOnSpawn = false
+    Main.DisplayOrder = MAX_DISPLAY_ORDER
+    Main.Parent = COREGUI
+    PARENT = Main
 end
 
 -- ===================== GUI =====================
-local CoreGui = game:GetService("CoreGui")
-
--- Xóa GUI cũ nếu có
-local oldGui = CoreGui:FindFirstChild("ChestFarmGui") 
-    or player.PlayerGui:FindFirstChild("ChestFarmGui")
-if oldGui then oldGui:Destroy() end
-
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ChestFarmGui"
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999
+screenGui.DisplayOrder = MAX_DISPLAY_ORDER
+screenGui.Parent = PARENT
 
--- Thử parent theo thứ tự ưu tiên
-local parentSuccess = false
-
-if not parentSuccess then
-    parentSuccess = pcall(function()
-        local hgui = (gethui or get_hidden_gui)()
-        screenGui.Parent = hgui
-    end)
-end
-
-if not parentSuccess then
-    parentSuccess = pcall(function()
-        syn.protect_gui(screenGui)
-        screenGui.Parent = CoreGui
-    end)
-end
-
-if not parentSuccess then
-    parentSuccess = pcall(function()
-        screenGui.Parent = CoreGui
-    end)
-end
-
-if not parentSuccess then
-    screenGui.Parent = player.PlayerGui
-end
-
--- ===================== BUILD GUI =====================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 270, 0, 370)
 mainFrame.Position = UDim2.new(0, 16, 0.5, -185)
@@ -299,13 +298,13 @@ task.spawn(function()
 
         if remaining == 0 then
             setStatus(
-                "✅ Xong! " .. opened .. " mở — chờ round mới", 
+                "✅ Xong! " .. opened .. " mở — chờ round mới",
                 Color3.fromRGB(80, 255, 120)
             )
             addLog("✅ Hết chest! Chờ map tiếp...")
         else
             setStatus(
-                "⚠ Còn " .. remaining .. " chest — retry sau 3s", 
+                "⚠ Còn " .. remaining .. " chest — retry sau 3s",
                 Color3.fromRGB(255, 180, 60)
             )
             addLog("⚠ Còn sót " .. remaining .. ", retry...")
