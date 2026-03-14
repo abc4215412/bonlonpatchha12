@@ -266,7 +266,7 @@ local function farmOneRound()
     return opened, skipped
 end
 
--- ===================== CHẠY 1 LẦN SAU 20 GIÂY =====================
+-- ===================== CHẠY 1 LẦN SAU 30 GIÂY =====================
 task.spawn(function()
     -- Đếm ngược 30 giây
     for i = 30, 1, -1 do
