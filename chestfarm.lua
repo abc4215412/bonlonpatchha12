@@ -211,44 +211,46 @@ local function rebuildList()
     return remaining
 end
 
--- ===================== FIRE PROMPT AN TOÀN =====================
+-- ===================== FIRE PROMPT (không cần focus cửa sổ) =====================
 local function firePromptSafe(prompt, part)
-    -- Cách 1: fireproximityprompt — không cần camera, tốt nhất
+    -- Cách 1: fireproximityprompt — không cần focus, không cần camera
     local ok = pcall(fireproximityprompt, prompt)
     if ok then return end
 
-    -- Cách 2: xoay camera nhìn thẳng vào chest rồi giả lập phím E
+    -- Cách 2: click trực tiếp vào ProximityPrompt UI button
+    local clickOk = pcall(function()
+        local playerGui = player:FindFirstChild("PlayerGui")
+        if playerGui then
+            for _, gui in playerGui:GetDescendants() do
+                if gui:IsA("TextButton") and gui.Text:find("Open Chest") then
+                    fireclickdetector and fireclickdetector(gui)
+                    break
+                end
+            end
+        end
+    end)
+    if clickOk then return end
+
+    -- Cách 3: fallback — xoay camera + phím E
+    -- Chỉ hoạt động khi Roblox đang được focus
     pcall(function()
         local cam = workspace.CurrentCamera
         local char = player.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-
         if cam and root then
             local oldType = cam.CameraType
-            local oldCFrame = cam.CFrame
-
-            -- Ép camera nhìn thẳng vào chest
             cam.CameraType = Enum.CameraType.Scriptable
             cam.CFrame = CFrame.lookAt(
                 root.Position + Vector3.new(0, 1.5, 0),
                 part.Position
             )
-
             task.wait(0.05)
-
-            -- Giả lập giữ E
             local vim = game:GetService("VirtualInputManager")
             vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
             task.wait((prompt.HoldDuration or 0.5) + 0.15)
             vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-
             task.wait(0.1)
-
-            -- Restore camera
             cam.CameraType = oldType
-            if oldType == Enum.CameraType.Scriptable then
-                cam.CFrame = oldCFrame
-            end
         end
     end)
 end
@@ -310,19 +312,15 @@ local function farmOneRound()
         end
 
         setStatus("Chest " .. i .. "/" .. #parts, Color3.fromRGB(255, 220, 50))
-
-        -- Teleport sát chest
         char.HumanoidRootPart.CFrame = CFrame.new(part.Position + Vector3.new(0, 4, 0))
         task.wait(0.2)
 
-        -- Check lại prompt sau teleport
         prompt = getPrompt(part)
         if not prompt then
             skipped += 1
             continue
         end
 
-        -- Mở chest với camera fix
         firePromptSafe(prompt, part)
 
         opened += 1
@@ -338,11 +336,9 @@ end
 task.spawn(function()
     while true do
 
-        -- Bước 1: chờ map sẵn sàng
         local ok = waitForReady()
 
         if ok then
-            -- Bước 2: đếm ngược 30 giây
             for i = 30, 1, -1 do
                 if player:GetAttribute("Ready") ~= true then
                     addLog("⚠ Map reset khi đếm ngược")
@@ -352,7 +348,6 @@ task.spawn(function()
                 task.wait(1)
             end
 
-            -- Bước 3: farm 1 lần
             if player:GetAttribute("Ready") == true then
                 farmOneRound()
                 rebuildList()
@@ -361,7 +356,6 @@ task.spawn(function()
             end
         end
 
-        -- Bước 4: chờ Ready tắt
         while player:GetAttribute("Ready") == true do
             task.wait(0.5)
         end
