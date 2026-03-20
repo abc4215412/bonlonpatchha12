@@ -211,35 +211,26 @@ local function rebuildList()
     return remaining
 end
 
--- ===================== OPEN PROMPT (không cần focus/camera) =====================
+-- ===================== OPEN PROMPT =====================
+-- Không cần focus cửa sổ, không cần nhìn vào chest, không cần camera đúng hướng
 local function openPrompt(prompt)
-    -- Cách 1: fireproximityprompt — chuẩn nhất, không cần focus cửa sổ
+    -- Cách 1: fireproximityprompt — chuẩn nhất
     if fireproximityprompt then
-        local ok, err = pcall(fireproximityprompt, prompt)
+        local ok = pcall(fireproximityprompt, prompt)
         if ok then return true end
     end
 
-    -- Cách 2: tên hàm thay thế trên một số executor
+    -- Cách 2: tên thay thế trên một số executor
     if fire_proximity_prompt then
         local ok = pcall(fire_proximity_prompt, prompt)
         if ok then return true end
     end
 
-    -- Cách 3: fire thẳng signal Triggered — bypass hoàn toàn input
-    -- Không cần focus, không cần camera, không cần E
+    -- Cách 3: fire thẳng signal Triggered — bypass hoàn toàn input/camera/focus
     local ok = pcall(function()
         prompt.Triggered:Fire(player)
     end)
     if ok then return true end
-
-    -- Cách 4: dùng TeleportService workaround — gọi internal trigger
-    local ok2 = pcall(function()
-        local args = {
-            [1] = prompt
-        }
-        game:GetService("ProximityPromptService").PromptTriggered:Fire(unpack(args))
-    end)
-    if ok2 then return true end
 
     return false
 end
@@ -301,8 +292,6 @@ local function farmOneRound()
         end
 
         setStatus("Chest " .. i .. "/" .. #parts, Color3.fromRGB(255, 220, 50))
-
-        -- Teleport sát chest để đảm bảo trong tầm ProximityPrompt
         char.HumanoidRootPart.CFrame = CFrame.new(part.Position + Vector3.new(0, 4, 0))
         task.wait(0.2)
 
@@ -312,7 +301,6 @@ local function farmOneRound()
             continue
         end
 
-        -- Mở prompt — không cần focus cửa sổ hay nhìn vào chest
         local success = openPrompt(prompt)
         if success then
             opened += 1
