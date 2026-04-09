@@ -156,7 +156,7 @@ end
 -- ===================== MAIN =====================
 local function run()
     -- Đếm ngược 13 giây
-    for i = 13, 1, -1 do
+    for i = 20, 1, -1 do
         setStatus("Teleport sau " .. i .. "s...", Color3.fromRGB(180, 180, 255))
         task.wait(1)
     end
