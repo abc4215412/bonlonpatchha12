@@ -30,12 +30,12 @@ end
 
 -- Teleport ngay khi load
 task.spawn(function()
-    task.wait(1) -- chờ character sẵn sàng
+    task.wait(10) -- chờ character sẵn sàng
     doTeleport()
 end)
 
 -- Teleport lại mỗi khi respawn
 player.CharacterAdded:Connect(function()
-    task.wait(1)
+    task.wait(10)
     doTeleport()
 end)
